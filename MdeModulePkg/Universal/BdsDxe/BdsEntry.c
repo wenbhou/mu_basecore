@@ -751,27 +751,10 @@ BdsEntry (
   //
   BdsFormalizeEfiGlobalVariable ();
 
+  // MU_CHANGE
   //
-  // Mark the read-only variables if the Variable Lock protocol exists
+  // Initialize Hardware Error Recording Support.
   //
-  Status = gBS->LocateProtocol (&gEdkiiVariablePolicyProtocolGuid, NULL, (VOID **)&VariablePolicy);
-  DEBUG ((DEBUG_INFO, "[BdsDxe] Locate Variable Policy protocol - %r\n", Status));
-  if (!EFI_ERROR (Status)) {
-    for (Index = 0; Index < ARRAY_SIZE (mReadOnlyVariables); Index++) {
-      Status = RegisterBasicVariablePolicy (
-                 VariablePolicy,
-                 &gEfiGlobalVariableGuid,
-                 mReadOnlyVariables[Index],
-                 VARIABLE_POLICY_NO_MIN_SIZE,
-                 VARIABLE_POLICY_NO_MAX_SIZE,
-                 VARIABLE_POLICY_NO_MUST_ATTR,
-                 VARIABLE_POLICY_NO_CANT_ATTR,
-                 VARIABLE_POLICY_TYPE_LOCK_NOW
-                 );
-      ASSERT_EFI_ERROR (Status);
-    }
-  }
-
   InitializeHwErrRecSupport ();
 
   //
@@ -831,6 +814,40 @@ BdsEntry (
   // Initialize the platform language variables
   //
   InitializeLanguage (TRUE);
+
+  // MU_CHANGE [BEGIN]
+
+  //
+  // READ ONLY Variable (registered in mReadOnlyVariables) MUST BE be set before this point.
+  //
+
+  //
+  // Mark the read-only variables if the Variable Lock protocol exists
+  //
+  Status = gBS->LocateProtocol (&gEdkiiVariablePolicyProtocolGuid, NULL, (VOID **)&VariablePolicy);
+  if (!EFI_ERROR (Status)) {
+    for (Index = 0; Index < ARRAY_SIZE (mReadOnlyVariables); Index++) {
+      Status = RegisterBasicVariablePolicy (
+                 VariablePolicy,
+                 &gEfiGlobalVariableGuid,
+                 mReadOnlyVariables[Index],
+                 VARIABLE_POLICY_NO_MIN_SIZE,
+                 VARIABLE_POLICY_NO_MAX_SIZE,
+                 VARIABLE_POLICY_NO_MUST_ATTR,
+                 VARIABLE_POLICY_NO_CANT_ATTR,
+                 VARIABLE_POLICY_TYPE_LOCK_NOW
+                 );
+
+      if (EFI_ERROR (Status)) {
+        DEBUG ((DEBUG_ERROR, "[BdsDxe] Failed to register variable policy! - %r\n", Status));
+        ASSERT_EFI_ERROR (Status);
+      }
+    }
+  } else {
+    DEBUG ((DEBUG_INFO, "[BdsDxe] Locate Variable Policy protocol failed! - %r\n", Status));
+  }
+
+  // MU_CHANGE [END]
 
   FilePath = FileDevicePath (NULL, EFI_REMOVABLE_MEDIA_FILE_NAME);
   if (FilePath == NULL) {
@@ -925,8 +942,13 @@ BdsEntry (
   // Execute Driver Options
   //
   LoadOptions = EfiBootManagerGetLoadOptions (&LoadOptionCount, LoadOptionTypeDriver);
-  ProcessLoadOptions (LoadOptions, LoadOptionCount);
-  EfiBootManagerFreeLoadOptions (LoadOptions, LoadOptionCount);
+  // MU_CHANGE Start - CodeQL Change - unguardednullreturndereference
+  if ((LoadOptionCount != 0) && (LoadOptions != NULL)) {
+    ProcessLoadOptions (LoadOptions, LoadOptionCount);
+    EfiBootManagerFreeLoadOptions (LoadOptions, LoadOptionCount);
+  }
+
+  // MU_CHANGE End - CodeQL Change - unguardednullreturndereference
 
   //
   // Connect consoles
@@ -997,15 +1019,20 @@ BdsEntry (
       mBdsLoadOptionName[LoadOptionType]
       ));
     LoadOptions = EfiBootManagerGetLoadOptions (&LoadOptionCount, LoadOptionType);
-    for (Index = 0; Index < LoadOptionCount; Index++) {
-      DEBUG ((
-        DEBUG_INFO,
-        "    %s%04x: %s \t\t 0x%04x\n",
-        mBdsLoadOptionName[LoadOptionType],
-        LoadOptions[Index].OptionNumber,
-        LoadOptions[Index].Description,
-        LoadOptions[Index].Attributes
-        ));
+    // MU_CHANGE Start - CodeQL Change - unguardednullreturndereference
+    if ((LoadOptionCount != 0) && (LoadOptions != NULL)) {
+      for (Index = 0; Index < LoadOptionCount; Index++) {
+        DEBUG ((
+          DEBUG_INFO,
+          "    %s%04x: %s \t\t 0x%04x\n",
+          mBdsLoadOptionName[LoadOptionType],
+          LoadOptions[Index].OptionNumber,
+          LoadOptions[Index].Description,
+          LoadOptions[Index].Attributes
+          ));
+      }
+
+      // MU_CHANGE End - CodeQL Change - unguardednullreturndereference
     }
 
     EfiBootManagerFreeLoadOptions (LoadOptions, LoadOptionCount);
@@ -1061,8 +1088,13 @@ BdsEntry (
     // Execute SysPrep####
     //
     LoadOptions = EfiBootManagerGetLoadOptions (&LoadOptionCount, LoadOptionTypeSysPrep);
-    ProcessLoadOptions (LoadOptions, LoadOptionCount);
-    EfiBootManagerFreeLoadOptions (LoadOptions, LoadOptionCount);
+    // MU_CHANGE Start - CodeQL Change - unguardednullreturndereference
+    if ((LoadOptionCount != 0) && (LoadOptions != NULL)) {
+      ProcessLoadOptions (LoadOptions, LoadOptionCount);
+      EfiBootManagerFreeLoadOptions (LoadOptions, LoadOptionCount);
+    }
+
+    // MU_CHANGE Start - CodeQL Change - unguardednullreturndereference
 
     //
     // Execute Key####
@@ -1122,8 +1154,13 @@ BdsEntry (
       // Retry to boot if any of the boot succeeds
       //
       LoadOptions = EfiBootManagerGetLoadOptions (&LoadOptionCount, LoadOptionTypeBoot);
-      BootSuccess = BootBootOptions (LoadOptions, LoadOptionCount, (BootManagerMenuStatus != EFI_NOT_FOUND) ? &BootManagerMenu : NULL);
-      EfiBootManagerFreeLoadOptions (LoadOptions, LoadOptionCount);
+      // MU_CHANGE Start - CodeQL Change - unguardednullreturndereference
+      if ((LoadOptionCount != 0) && (LoadOptions != NULL)) {
+        BootSuccess = BootBootOptions (LoadOptions, LoadOptionCount, (BootManagerMenuStatus != EFI_NOT_FOUND) ? &BootManagerMenu : NULL);
+        EfiBootManagerFreeLoadOptions (LoadOptions, LoadOptionCount);
+      }
+
+      // MU_CHANGE End - CodeQL Change - unguardednullreturndereference
     } while (BootSuccess || PcdGetBool (PcdSupportInfiniteBootRetries)); // MU_CHANGE add PcdSupportInfiniteBootRetries support
   }
 
@@ -1134,8 +1171,13 @@ BdsEntry (
   if (!BootSuccess) {
     if (PcdGetBool (PcdPlatformRecoverySupport)) {
       LoadOptions = EfiBootManagerGetLoadOptions (&LoadOptionCount, LoadOptionTypePlatformRecovery);
-      ProcessLoadOptions (LoadOptions, LoadOptionCount);
-      EfiBootManagerFreeLoadOptions (LoadOptions, LoadOptionCount);
+      // MU_CHANGE Start - CodeQL Change - unguardednullreturndereference
+      if ((LoadOptionCount != 0) && (LoadOptions != NULL)) {
+        ProcessLoadOptions (LoadOptions, LoadOptionCount);
+        EfiBootManagerFreeLoadOptions (LoadOptions, LoadOptionCount);
+      }
+
+      // MU_CHANGE End - CodeQL Change - unguardednullreturndereference
     } else if (PlatformDefaultBootOptionValid) {
       // MU_CHANGE TCBZ2523 - Bds should NEVER boot anything the platform has not specified.
       //
