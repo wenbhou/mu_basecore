@@ -1,3 +1,9 @@
+[registries]
+Thanos_PublicPackages = { index = "sparse+https://pkgs.dev.azure.com/windowspartners/MsCoreUefi_Thanos/_packaging/Thanos_PublicPackages/Cargo/index/" }
+
+[source.crates-io]
+replace-with = "Thanos_PublicPackages"
+
 [target.x86_64-unknown-uefi]
 rustflags = [
     "-C", "link-arg=/base:0x0",
