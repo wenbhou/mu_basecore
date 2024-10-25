@@ -3,7 +3,6 @@
 
 Copyright (c) 2006 - 2014, Intel Corporation. All rights reserved.<BR>
 Copyright (c) 2017 - 2018, ARM Limited. All rights reserved.<BR>
-Copyright (c) Microsoft Corporation.<BR> // MU_SEC_TCBZ4166 -  Mitigate integer overflow
 
 SPDX-License-Identifier: BSD-2-Clause-Patent
 
