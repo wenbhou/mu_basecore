@@ -292,13 +292,14 @@ class HostBasedUnitTestRunner(IUefiBuildPlugin):
         package = thebuilder.env.GetValue("CI_PACKAGE_NAME", "")
         file_out = package + "_coverage.xml"
         cov_file = os.path.join(buildOutputBase, file_out)
+        exclude = thebuilder.env.GetValue("CC_EXCLUDE", "*NULL*,*Null*,*null*")
 
         params = f"--database {db_path} coverage {cov_file} -o {cov_file} --by-package -ws {workspace}"
 
         params += f" -p {package}" * int(package != "")
         params += " --full" * int(thebuilder.env.GetValue("CC_FULL", "FALSE") == "TRUE")
         params += " --flatten" * int(thebuilder.env.GetValue("CC_FLATTEN", "FALSE") == "TRUE")
-        params += " --exclude *NULL*,*Null*,*null*"
+        params += f" --exclude {exclude}" * int(exclude != "")
         return RunCmd("stuart_report", params)
 
     def parse_workspace(self, thebuilder) -> str:
