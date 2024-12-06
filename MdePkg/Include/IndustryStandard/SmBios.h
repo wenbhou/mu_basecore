@@ -706,6 +706,7 @@ typedef enum {
   ProcessorFamilyIntelCoreI5                     = 0xCD,
   ProcessorFamilyIntelCoreI3                     = 0xCE,
   ProcessorFamilyIntelCoreI9                     = 0xCF,
+  ProcessorFamilyIntelXeonD                      = 0xD0,  /// Smbios spec 3.8 updated this value
   ProcessorFamilyViaC7M                          = 0xD2,
   ProcessorFamilyViaC7D                          = 0xD3,
   ProcessorFamilyViaC7                           = 0xD4,
@@ -887,7 +888,8 @@ typedef enum {
   ProcessorUpgradeSocketBGA2551   = 0x54,
   ProcessorUpgradeSocketLGA1851   = 0x55,
   ProcessorUpgradeSocketBGA2114   = 0x56,
-  ProcessorUpgradeSocketBGA2833   = 0x57
+  ProcessorUpgradeSocketBGA2833   = 0x57,
+  ProcessorUpgradeInvalid         = 0xFF
 } PROCESSOR_UPGRADE;
 
 ///
