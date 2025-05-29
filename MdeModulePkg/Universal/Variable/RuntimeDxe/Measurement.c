@@ -364,6 +364,6 @@ RecordSecureBootPolicyVarData (
     //
     // Read could fail when Auth Variable solution is not supported
     //
-    DEBUG ((DEBUG_INFO, "RecordSecureBootPolicyVarData GetVariable %s Status %x\n", EFI_SECURE_BOOT_MODE_NAME, Status));
+    DEBUG ((DEBUG_INFO, "RecordSecureBootPolicyVarData GetVariable %s Status %r\n", EFI_SECURE_BOOT_MODE_NAME, Status));
   }
 }

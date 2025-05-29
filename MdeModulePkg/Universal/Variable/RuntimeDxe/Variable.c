@@ -1799,6 +1799,9 @@ UpdateVariable (
   AUTHENTICATED_VARIABLE_HEADER       *AuthVariable;
   BOOLEAN                             AuthFormat;
 
+  DEBUG ((DEBUG_ERROR, "[%a] mVariableModuleGlobal->FvbInstance=%p\n", __FUNCTION__, mVariableModuleGlobal->FvbInstance));
+  DEBUG ((DEBUG_ERROR, "[%a] mVariableModuleGlobal->VariableGlobal.EmuNvMode=0x%x\n", __FUNCTION__, mVariableModuleGlobal->VariableGlobal.EmuNvMode));
+
   if ((mVariableModuleGlobal->FvbInstance == NULL) && !mVariableModuleGlobal->VariableGlobal.EmuNvMode) {
     //
     // The FVB protocol is not ready, so the EFI_VARIABLE_WRITE_ARCH_PROTOCOL is not installed.
@@ -3573,17 +3576,23 @@ VariableWriteServiceInitialize (
   UINT8                    Data;
   VARIABLE_ENTRY_PROPERTY  *VariableEntry;
 
+  DEBUG ((DEBUG_ERROR, "[%a,%d]\n", __FUNCTION__, __LINE__));
+
   AcquireLockOnlyAtBootTime (&mVariableModuleGlobal->VariableGlobal.VariableServicesLock);
 
   //
   // Check if the free area is really free.
   //
+  DEBUG ((DEBUG_ERROR, "[%a,%d] mVariableModuleGlobal->NonVolatileLastVariableOffset = 0x%x\n", __FUNCTION__, __LINE__, mVariableModuleGlobal->NonVolatileLastVariableOffset));
+  DEBUG ((DEBUG_ERROR, "[%a,%d] mNvVariableCache->Size = 0x%x\n", __FUNCTION__, __LINE__, mNvVariableCache->Size));
   for (Index = mVariableModuleGlobal->NonVolatileLastVariableOffset; Index < mNvVariableCache->Size; Index++) {
     Data = ((UINT8 *)mNvVariableCache)[Index];
     if (Data != 0xff) {
       //
       // There must be something wrong in variable store, do reclaim operation.
       //
+      DEBUG ((DEBUG_ERROR, "[%a,%d] mVariableModuleGlobal->VariableGlobal.NonVolatileVariableBase = 0x%x\n", __FUNCTION__, __LINE__, mVariableModuleGlobal->VariableGlobal.NonVolatileVariableBase));
+      DEBUG ((DEBUG_ERROR, "[%a,%d] mVariableModuleGlobal->NonVolatileLastVariableOffset = 0x%x\n", __FUNCTION__, __LINE__, mVariableModuleGlobal->NonVolatileLastVariableOffset));
       Status = Reclaim (
                  mVariableModuleGlobal->VariableGlobal.NonVolatileVariableBase,
                  &mVariableModuleGlobal->NonVolatileLastVariableOffset,
@@ -3594,6 +3603,7 @@ VariableWriteServiceInitialize (
                  );
       if (EFI_ERROR (Status)) {
         ReleaseLockOnlyAtBootTime (&mVariableModuleGlobal->VariableGlobal.VariableServicesLock);
+        DEBUG ((DEBUG_ERROR, "[%a,%d] Reclaim failed: Status = 0x%x\n", __FUNCTION__, __LINE__, Status));
         return Status;
       }
 
@@ -3605,6 +3615,7 @@ VariableWriteServiceInitialize (
 
   Status = EFI_SUCCESS;
   ZeroMem (&mAuthContextOut, sizeof (mAuthContextOut));
+  DEBUG ((DEBUG_ERROR, "[%a,%d] mVariableModuleGlobal->VariableGlobal.AuthFormat = 0x%x\n", __FUNCTION__, __LINE__, mVariableModuleGlobal->VariableGlobal.AuthFormat));
   if (mVariableModuleGlobal->VariableGlobal.AuthFormat) {
     //
     // Authenticated variable initialize.
@@ -3649,6 +3660,8 @@ VariableWriteServiceInitialize (
   // Initialize MOR Lock variable.
   //
   MorLockInit ();
+
+  DEBUG ((DEBUG_ERROR, "[%a,%d] Exit Status = 0x%x\n", __FUNCTION__, __LINE__, Status));
 
   return Status;
 }
@@ -3907,6 +3920,8 @@ VariableCommonInitialize (
     }
 
     FreePool (mVariableModuleGlobal);
+    DEBUG ((DEBUG_ERROR, "GetHobVariableStore failed with %r\n", Status));
+    ASSERT_EFI_ERROR (Status);
     return Status;
   }
 
@@ -3930,6 +3945,8 @@ VariableCommonInitialize (
     }
 
     FreePool (mVariableModuleGlobal);
+    Status = EFI_OUT_OF_RESOURCES;
+    ASSERT_EFI_ERROR (Status);
     return EFI_OUT_OF_RESOURCES;
   }
 
@@ -3982,8 +3999,11 @@ GetFvbInfoByAddress (
   //
   Status = GetFvbCountAndBuffer (&HandleCount, &HandleBuffer);
   if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "[%a] GetFvbCountAndBuffer failed. Status = %r\n", __FUNCTION__, Status));
     return EFI_NOT_FOUND;
   }
+
+  DEBUG ((DEBUG_ERROR, "[%a] GetFvbCountAndBuffer HandleCount = %d\n", __FUNCTION__, HandleCount));
 
   //
   // Get the FVB to access variable store.
@@ -4020,6 +4040,11 @@ GetFvbInfoByAddress (
       continue;
     }
 
+    DEBUG ((DEBUG_ERROR, "[%a] Address = 0x%x\n", __FUNCTION__, Address));
+    DEBUG ((DEBUG_ERROR, "[%a] FvbBaseAddress = 0x%x\n", __FUNCTION__, FvbBaseAddress));
+    DEBUG ((DEBUG_ERROR, "[%a] BlockSize = 0x%x\n", __FUNCTION__, BlockSize));
+    DEBUG ((DEBUG_ERROR, "[%a] NumberOfBlocks = 0x%x\n", __FUNCTION__, NumberOfBlocks));
+
     if ((Address >= FvbBaseAddress) && (Address < (FvbBaseAddress + BlockSize * NumberOfBlocks))) {
       if (FvbHandle != NULL) {
         *FvbHandle = HandleBuffer[Index];
@@ -4028,6 +4053,8 @@ GetFvbInfoByAddress (
       if (FvbProtocol != NULL) {
         *FvbProtocol = Fvb;
       }
+
+      DEBUG ((DEBUG_ERROR, "[%a] FVB found\n", __FUNCTION__));
 
       Status = EFI_SUCCESS;
       break;

@@ -1162,6 +1162,8 @@ SmmFtwNotificationEvent (
   //
   Status = GetFvbInfoByAddress (NvStorageVariableBase, NULL, &FvbProtocol);
   if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "[%a]. GetFvbInfoByAddress failed. Status = %r\n", __FUNCTION__, Status));
+    ASSERT_EFI_ERROR (Status);
     return EFI_NOT_FOUND;
   }
 
