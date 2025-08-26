@@ -82,7 +82,7 @@ UsbIoControlTransfer (
   Dev   = UsbIf->Device;
   // MU_CHANGE [BEGIN]
   if (Dev->Connected == FALSE) {
-    Status = EFI_DEVICE_ERROR;
+    Status = EFI_NO_MEDIA;
     DEBUG ((DEBUG_ERROR, "UsbIoControlTransfer No media\n"));
     goto ON_EXIT;
   }
@@ -274,7 +274,7 @@ UsbIoBulkTransfer (
   Dev   = UsbIf->Device;
   // MU_CHANGE [BEGIN]
   if (Dev->Connected == FALSE) {
-    Status = EFI_DEVICE_ERROR;
+    Status = EFI_NO_MEDIA;
     DEBUG ((DEBUG_ERROR, "UsbIoBulkTransfer No media\n"));
     goto ON_EXIT;
   }
@@ -374,7 +374,7 @@ UsbIoSyncInterruptTransfer (
   Dev   = UsbIf->Device;
   // MU_CHANGE [BEGIN]
   if (Dev->Connected == FALSE) {
-    Status = EFI_DEVICE_ERROR;
+    Status = EFI_NO_MEDIA;
     DEBUG ((DEBUG_ERROR, "UsbIoSyncInterruptTransfer No media\n"));
     goto ON_EXIT;
   }
@@ -457,7 +457,7 @@ UsbIoAsyncInterruptTransfer (
   Dev    = UsbIf->Device;
   // MU_CHANGE [BEGIN]
   if ((Dev->Connected == FALSE) && (IsNewTransfer == TRUE)) {
-    Status = EFI_DEVICE_ERROR;
+    Status = EFI_NO_MEDIA;
     DEBUG ((DEBUG_ERROR, "UsbIoAsyncInterruptTransfer No media\n"));
     goto ON_EXIT;
   }
@@ -580,7 +580,7 @@ UsbIoGetDeviceDescriptor (
   Status = EFI_SUCCESS;
 
   if (Dev->Connected == FALSE) {
-    Status = EFI_DEVICE_ERROR;
+    Status = EFI_NO_MEDIA;
     goto ON_EXIT;
   }
 
@@ -627,7 +627,7 @@ UsbIoGetActiveConfigDescriptor (
   Dev   = UsbIf->Device;
   // MU_CHANGE [BEGIN]
   if (Dev->Connected == FALSE) {
-    Status = EFI_DEVICE_ERROR;
+    Status = EFI_NO_MEDIA;
     goto ON_EXIT;
   }
 
@@ -678,7 +678,7 @@ UsbIoGetInterfaceDescriptor (
   Status = EFI_SUCCESS;
 
   if (Dev->Connected == FALSE) {
-    Status = EFI_DEVICE_ERROR;
+    Status = EFI_NO_MEDIA;
     goto ON_EXIT;
   }
 
@@ -724,7 +724,7 @@ UsbIoGetEndpointDescriptor (
   Status = EFI_SUCCESS;
 
   if (Dev->Connected == FALSE) {
-    Status = EFI_DEVICE_ERROR;
+    Status = EFI_NO_MEDIA;
     goto ON_EXIT;
   }
 
@@ -786,7 +786,7 @@ UsbIoGetSupportedLanguages (
   Status = EFI_SUCCESS;
 
   if (Dev->Connected == FALSE) {
-    Status = EFI_DEVICE_ERROR;
+    Status = EFI_NO_MEDIA;
     goto ON_EXIT;
   }
 
@@ -839,7 +839,7 @@ UsbIoGetStringDescriptor (
   Dev   = UsbIf->Device;
   // MU_CHANGE [BEGIN]
   if (Dev->Connected == FALSE) {
-    Status = EFI_DEVICE_ERROR;
+    Status = EFI_NO_MEDIA;
     goto ON_EXIT;
   }
 
@@ -923,7 +923,7 @@ UsbIoPortReset (
   Dev   = UsbIf->Device;
   // MU_CHANGE [BEGIN]
   if (Dev->Connected == FALSE) {
-    Status = EFI_DEVICE_ERROR;
+    Status = EFI_NO_MEDIA;
     DEBUG ((DEBUG_ERROR, "UsbIoPortReset No media\n"));
     goto ON_EXIT;
   }
