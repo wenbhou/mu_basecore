@@ -665,6 +665,7 @@ UsbBootGetParams (
   }
 
   Status = UsbBootDetectMedia (UsbMass);
+  DEBUG ((DEBUG_ERROR, "%a(%d): UsbBootDetectMedia Status = %r\n", __FUNCTION__, __LINE__, Status));
 
   return Status;
 }

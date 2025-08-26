@@ -140,17 +140,27 @@ UsbCreateInterface (
     goto ON_ERROR;
   }
 
-  Status = gBS->InstallMultipleProtocolInterfaces (
+  Status = gBS->InstallProtocolInterface (
                   &UsbIf->Handle,
-                  &gEfiDevicePathProtocolGuid,
-                  UsbIf->DevicePath,
                   &gEfiUsbIoProtocolGuid,
-                  &UsbIf->UsbIo,
-                  NULL
+                  EFI_NATIVE_INTERFACE,
+                  &UsbIf->UsbIo
                   );
 
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "UsbCreateInterface: failed to install UsbIo - %r\n", Status));
+    goto ON_ERROR;
+  }
+
+  Status = gBS->InstallProtocolInterface (
+                  &UsbIf->Handle,
+                  &gEfiDevicePathProtocolGuid,
+                  EFI_NATIVE_INTERFACE,
+                  UsbIf->DevicePath
+                  );
+
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "UsbCreateInterface: failed to install DevicePath - %r\n", Status));
     goto ON_ERROR;
   }
 
@@ -494,7 +504,7 @@ UsbDisconnectDriver (
       UsbIf->IsManaged = FALSE;
     }
 
-    DEBUG ((DEBUG_INFO, "UsbDisconnectDriver: TPL after disconnect is %d, %d\n", (UINT32)UsbGetCurrentTpl (), Status));
+    DEBUG ((DEBUG_INFO, "UsbDisconnectDriver: TPL after disconnect is %d, %r\n", (UINT32)UsbGetCurrentTpl (), Status));
     ASSERT (UsbGetCurrentTpl () == TPL_CALLBACK);
 
     gBS->RaiseTPL (OldTpl);
@@ -603,8 +613,9 @@ UsbRemoveDevice (
   DEBUG ((DEBUG_INFO, "UsbRemoveDevice: ParentIf %p port %d Disonnected\n", Device->ParentIf, Device->ParentPort));
   // MU_CHANGE [END]
   Status = UsbRemoveConfig (Device);
+  DEBUG ((DEBUG_INFO, "UsbRemoveDevice: device %d removed config: Status = %r\n", Device->Address, Status));
 
-  if (!EFI_ERROR (Status)) {
+  if (!EFI_ERROR (Status) || (Status == EFI_NOT_FOUND)) {
     DEBUG ((DEBUG_INFO, "UsbRemoveDevice: device %d removed\n", Device->Address));
 
     ASSERT (Device->Address < Bus->MaxDevices);
@@ -612,6 +623,7 @@ UsbRemoveDevice (
     UsbFreeDevice (Device);
   } else {
     Bus->Devices[Device->Address]->DisconnectFail = TRUE;
+    DEBUG ((DEBUG_ERROR, "UsbRemoveDevice: device %d disconnect failed\n", Device->Address));
   }
 
   return Status;
