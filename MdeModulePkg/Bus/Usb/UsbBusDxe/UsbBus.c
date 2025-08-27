@@ -1559,6 +1559,7 @@ UsbBusControllerDriverStop (
       UsbDev = UsbIf->Device;
 
       ReturnStatus = UsbRemoveDevice (UsbDev);
+      DEBUG ((DEBUG_INFO, "UsbBusStop(%d): UsbRemoveDevice(%r)\n", __LINE__, ReturnStatus));
     }
 
     gBS->RestoreTPL (OldTpl);
@@ -1600,6 +1601,7 @@ UsbBusControllerDriverStop (
   for (Index = 1; Index < Bus->MaxDevices; Index++) {
     if (Bus->Devices[Index] != NULL) {
       Status = UsbRemoveDevice (Bus->Devices[Index]);
+      DEBUG ((DEBUG_INFO, "UsbBusStop(%d): UsbRemoveDevice(%r)\n", __LINE__, Status));
       if (EFI_ERROR (Status)) {
         ReturnStatus = Status;
       }

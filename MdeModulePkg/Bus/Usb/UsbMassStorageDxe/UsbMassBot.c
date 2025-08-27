@@ -475,6 +475,14 @@ UsbBotResetDevice (
     // If we need to do strictly reset, reset its parent hub port
     //
     Status = UsbBot->UsbIo->UsbPortReset (UsbBot->UsbIo);
+    // MU_CHANGE [BEGIN]
+    if (Status == EFI_NO_MEDIA) {
+      DEBUG ((DEBUG_ERROR, "UsbBotResetDevice: UsbPortReset No media\n"));
+      return Status;
+    }
+
+    // MU_CHANGE [END]
+
     if (EFI_ERROR (Status)) {
       return EFI_DEVICE_ERROR;
     }
@@ -500,6 +508,14 @@ UsbBotResetDevice (
                             0,
                             &Result
                             );
+
+  // MU_CHANGE [BEGIN]
+  if (Status == EFI_NO_MEDIA) {
+    DEBUG ((DEBUG_ERROR, "UsbBotResetDevice: UsbControlTransfer No media\n"));
+    return Status;
+  }
+
+  // MU_CHANGE [END]
 
   if (EFI_ERROR (Status)) {
     return EFI_DEVICE_ERROR;

@@ -56,8 +56,29 @@ UsbFreeInterface (
 {
   EFI_STATUS  Status;
 
+  DEBUG ((DEBUG_ERROR, "%a,%d: UsbCloseHostProtoByChild Start\n", __FUNCTION__, __LINE__));
+
   UsbCloseHostProtoByChild (UsbIf->Device->Bus, UsbIf->Handle);
 
+  DEBUG ((DEBUG_ERROR, "%a,%d: UsbCloseHostProtoByChild End\n", __FUNCTION__, __LINE__));
+
+  Status = gBS->UninstallProtocolInterface (
+                  UsbIf->Handle,
+                  &gEfiUsbIoProtocolGuid,
+                  &UsbIf->UsbIo
+                  );
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "UsbFreeInterface: failed to uninstall UsbIo - %r\n", Status));
+    goto Exit;
+  }
+
+  Status = gBS->UninstallProtocolInterface (
+                  UsbIf->Handle,
+                  &gEfiDevicePathProtocolGuid,
+                  UsbIf->DevicePath
+                  );
+
+ #if 0
   Status = gBS->UninstallMultipleProtocolInterfaces (
                   UsbIf->Handle,
                   &gEfiDevicePathProtocolGuid,
@@ -66,6 +87,9 @@ UsbFreeInterface (
                   &UsbIf->UsbIo,
                   NULL
                   );
+ #endif
+
+Exit:
   DEBUG ((DEBUG_ERROR, "%a,%d: UsbIf->Handle = %p\n", __FUNCTION__, __LINE__, UsbIf->Handle));
   DEBUG ((DEBUG_ERROR, "%a,%d: UsbIf->DevicePath = %p\n", __FUNCTION__, __LINE__, UsbIf->DevicePath));
   DEBUG ((DEBUG_ERROR, "%a,%d: Status = %r\n", __FUNCTION__, __LINE__, Status));
@@ -550,7 +574,8 @@ UsbRemoveConfig (
 
     Status = UsbDisconnectDriver (UsbIf);
     DEBUG ((DEBUG_INFO, "UsbRemoveConfig: device %d: UsbDisconnectDriver Status = %r\n", Device->Address, Status));
-    if (!EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_INFO, "UsbRemoveConfig: device %d: UsbDisconnectDriver Status = 0x%llx\n", Device->Address, Status));
+    if (!EFI_ERROR (Status) || (Status == EFI_NOT_FOUND)) {
       Status = UsbFreeInterface (UsbIf);
       DEBUG ((DEBUG_INFO, "UsbRemoveConfig: device %d: UsbFreeInterface Status = %r\n", Device->Address, Status));
       if (EFI_ERROR (Status)) {
@@ -624,7 +649,7 @@ UsbRemoveDevice (
   Status = UsbRemoveConfig (Device);
   DEBUG ((DEBUG_INFO, "UsbRemoveDevice: device %d removed config: Status = %r\n", Device->Address, Status));
 
-  if (!EFI_ERROR (Status) || (Status == EFI_NOT_FOUND)) {
+  if (!EFI_ERROR (Status)) {
     DEBUG ((DEBUG_INFO, "UsbRemoveDevice: device %d removed\n", Device->Address));
 
     ASSERT (Device->Address < Bus->MaxDevices);
