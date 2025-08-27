@@ -66,6 +66,9 @@ UsbFreeInterface (
                   &UsbIf->UsbIo,
                   NULL
                   );
+  DEBUG ((DEBUG_ERROR, "%a,%d: UsbIf->Handle = %p\n", __FUNCTION__, __LINE__, UsbIf->Handle));
+  DEBUG ((DEBUG_ERROR, "%a,%d: UsbIf->DevicePath = %p\n", __FUNCTION__, __LINE__, UsbIf->DevicePath));
+  DEBUG ((DEBUG_ERROR, "%a,%d: Status = %r\n", __FUNCTION__, __LINE__, Status));
   if (!EFI_ERROR (Status)) {
     if (UsbIf->DevicePath != NULL) {
       FreePool (UsbIf->DevicePath);
@@ -106,6 +109,8 @@ UsbCreateInterface (
     return NULL;
   }
 
+  DEBUG ((DEBUG_ERROR, "%a,%d: UsbIf = %p\n", __FUNCTION__, __LINE__, UsbIf));
+
   UsbIf->Signature = USB_INTERFACE_SIGNATURE;
   UsbIf->Device    = Device;
   UsbIf->IfDesc    = IfDesc;
@@ -140,13 +145,15 @@ UsbCreateInterface (
     goto ON_ERROR;
   }
 
+  DEBUG ((DEBUG_ERROR, "%a,%d: UsbIf->DevicePath = %p\n", __FUNCTION__, __LINE__, UsbIf->DevicePath));
+
   Status = gBS->InstallProtocolInterface (
                   &UsbIf->Handle,
                   &gEfiUsbIoProtocolGuid,
                   EFI_NATIVE_INTERFACE,
                   &UsbIf->UsbIo
                   );
-
+  DEBUG ((DEBUG_ERROR, "%a,%d: UsbIf->Handle = %p, Status=%r\n", __FUNCTION__, __LINE__, UsbIf->Handle, Status));
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "UsbCreateInterface: failed to install UsbIo - %r\n", Status));
     goto ON_ERROR;
@@ -158,7 +165,7 @@ UsbCreateInterface (
                   EFI_NATIVE_INTERFACE,
                   UsbIf->DevicePath
                   );
-
+  DEBUG ((DEBUG_ERROR, "%a,%d: UsbIf->Handle = %p, Status=%r\n", __FUNCTION__, __LINE__, UsbIf->Handle, Status));
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "UsbCreateInterface: failed to install DevicePath - %r\n", Status));
     goto ON_ERROR;
@@ -542,8 +549,10 @@ UsbRemoveConfig (
     }
 
     Status = UsbDisconnectDriver (UsbIf);
+    DEBUG ((DEBUG_INFO, "UsbRemoveConfig: device %d: UsbDisconnectDriver Status = %r\n", Device->Address, Status));
     if (!EFI_ERROR (Status)) {
       Status = UsbFreeInterface (UsbIf);
+      DEBUG ((DEBUG_INFO, "UsbRemoveConfig: device %d: UsbFreeInterface Status = %r\n", Device->Address, Status));
       if (EFI_ERROR (Status)) {
         UsbConnectDriver (UsbIf);
       }
