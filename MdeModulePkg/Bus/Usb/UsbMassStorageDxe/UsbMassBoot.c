@@ -725,6 +725,13 @@ UsbBootDetectMedia (
     }
   }
 
+  // MU_CHANGE [BEGIN]
+  if (Status == EFI_NO_MEDIA) {
+    Media->MediaPresent = FALSE;
+  }
+
+  // MU_CHANGE [END]
+
   if (EFI_ERROR (Status) && (Status != EFI_NO_MEDIA)) {
     //
     // For NoMedia, BlockIo is still needed.
