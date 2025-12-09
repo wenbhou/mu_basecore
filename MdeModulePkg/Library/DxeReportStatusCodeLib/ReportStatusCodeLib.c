@@ -33,6 +33,7 @@ InternalGetReportStatusCode (
   )
 {
   EFI_STATUS  Status;
+  EFI_TPL     Tpl;  // MU_CHANGE
 
   if (mReportStatusCodeLibStatusCodeProtocol != NULL) {
     return;
@@ -42,6 +43,20 @@ InternalGetReportStatusCode (
   // Check gBS just in case ReportStatusCode is called before gBS is initialized.
   //
   if ((gBS != NULL) && (gBS->LocateProtocol != NULL)) {
+    // MU_CHANGE [BEGIN] - Guard LocateProtocol with TPL constraint (must be <= TPL_NOTIFY).
+    //
+    // Retrieve the current TPL
+    //
+    Tpl = gBS->RaiseTPL (TPL_HIGH_LEVEL);
+    gBS->RestoreTPL (Tpl);
+
+    if (Tpl > TPL_NOTIFY) {
+      mReportStatusCodeLibStatusCodeProtocol = NULL;
+      return;
+    }
+
+    // MU_CHANGE [END]
+
     Status = gBS->LocateProtocol (&gEfiStatusCodeRuntimeProtocolGuid, NULL, (VOID **)&mReportStatusCodeLibStatusCodeProtocol);
     if (EFI_ERROR (Status)) {
       mReportStatusCodeLibStatusCodeProtocol = NULL;
