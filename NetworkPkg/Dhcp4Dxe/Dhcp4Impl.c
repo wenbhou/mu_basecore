@@ -826,7 +826,7 @@ EfiDhcp4Start (
     while (DhcpSb->IoStatus == EFI_ALREADY_STARTED) {
       // MU_CHANGE [BEGIN] - Add Udp4 Polling break support
       Status = DhcpSb->UdpIo->Protocol.Udp4->Poll (DhcpSb->UdpIo->Protocol.Udp4);
-      if (EFI_ERROR (Status) && (Status != EFI_TIMEOUT)) {
+      if (EFI_ERROR (Status) && (Status != EFI_TIMEOUT) && (Status != EFI_NOT_READY)) {
         // Break out if the NIC goes away or poll fails so we don't spin forever.
         DhcpSb->IoStatus = Status;
         break;
