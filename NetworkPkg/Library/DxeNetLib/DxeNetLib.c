@@ -2582,6 +2582,12 @@ NetLibDetectMedia (
       goto Exit;
     }
 
+    if (Snp->Mode == NULL) {
+      DEBUG ((DEBUG_INFO, "[%a,%d]: Invalid Snp->Mode \n", __func__, __LINE__));
+      Status = EFI_DEVICE_ERROR;
+      goto Exit;
+    }
+
     //
     // Here we get the correct media status
     //
@@ -2624,6 +2630,12 @@ NetLibDetectMedia (
   //
   Status = Snp->Initialize (Snp, 0, 0);
   if (EFI_ERROR (Status)) {
+    Status = EFI_DEVICE_ERROR;
+    goto Exit;
+  }
+
+  if (Snp->Mode == NULL) {
+    DEBUG ((DEBUG_INFO, "[%a,%d]: Invalid Snp->Mode \n", __func__, __LINE__));
     Status = EFI_DEVICE_ERROR;
     goto Exit;
   }
@@ -2701,7 +2713,7 @@ NetLibDetectMediaWaitTimeout (
     return EFI_INVALID_PARAMETER;
   }
 
-  *MediaState = EFI_SUCCESS;
+  *MediaState = EFI_NOT_READY;
   MediaInfo   = NULL;
 
   //
