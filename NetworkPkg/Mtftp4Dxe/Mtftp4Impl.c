@@ -519,7 +519,9 @@ Mtftp4Start (
   // instance for synchronous operation.
   //
   while (Token->Status == EFI_NOT_READY) {
+    OldTpl = gBS->RaiseTPL (TPL_CALLBACK);
     This->Poll (This);
+    gBS->RestoreTPL (OldTpl);
   }
 
   return Token->Status;

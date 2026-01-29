@@ -1148,7 +1148,9 @@ Mtftp6OperationStart (
 
   if (Token->Event == NULL) {
     while (Token->Status == EFI_NOT_READY) {
+      Instance->OldTpl = gBS->RaiseTPL (TPL_CALLBACK);
       This->Poll (This);
+      gBS->RestoreTPL (Instance->OldTpl);
     }
 
     return Token->Status;
