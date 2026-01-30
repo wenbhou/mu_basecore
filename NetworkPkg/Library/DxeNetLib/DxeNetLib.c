@@ -2582,12 +2582,6 @@ NetLibDetectMedia (
       goto Exit;
     }
 
-    if (Snp->Mode == NULL) {
-      DEBUG ((DEBUG_INFO, "[%a,%d]: Invalid Snp->Mode \n", __func__, __LINE__));
-      Status = EFI_DEVICE_ERROR;
-      goto Exit;
-    }
-
     //
     // Here we get the correct media status
     //
@@ -2630,12 +2624,6 @@ NetLibDetectMedia (
   //
   Status = Snp->Initialize (Snp, 0, 0);
   if (EFI_ERROR (Status)) {
-    Status = EFI_DEVICE_ERROR;
-    goto Exit;
-  }
-
-  if (Snp->Mode == NULL) {
-    DEBUG ((DEBUG_INFO, "[%a,%d]: Invalid Snp->Mode \n", __func__, __LINE__));
     Status = EFI_DEVICE_ERROR;
     goto Exit;
   }
@@ -2708,6 +2696,7 @@ NetLibDetectMediaWaitTimeout (
   EFI_STATUS                        TimerStatus;
   EFI_EVENT                         Timer;
   UINT64                            TimeRemained;
+  EFI_TPL                           OldTpl;
 
   if (MediaState == NULL) {
     return EFI_INVALID_PARAMETER;
@@ -2732,7 +2721,9 @@ NetLibDetectMediaWaitTimeout (
                   );
   if (EFI_ERROR (Status)) {
     MediaPresent = TRUE;
+    OldTpl       = gBS->RaiseTPL (TPL_CALLBACK);
     Status       = NetLibDetectMedia (ServiceHandle, &MediaPresent);
+    gBS->RestoreTPL (OldTpl);
     if (!EFI_ERROR (Status)) {
       if (MediaPresent) {
         *MediaState = EFI_SUCCESS;
@@ -2769,7 +2760,9 @@ NetLibDetectMediaWaitTimeout (
       // If gEfiAdapterInfoMediaStateGuid is not supported, call NetLibDetectMedia to get media state!
       //
       MediaPresent = TRUE;
+      OldTpl       = gBS->RaiseTPL (TPL_CALLBACK);
       Status       = NetLibDetectMedia (ServiceHandle, &MediaPresent);
+      gBS->RestoreTPL (OldTpl);
       if (!EFI_ERROR (Status)) {
         if (MediaPresent) {
           *MediaState = EFI_SUCCESS;
