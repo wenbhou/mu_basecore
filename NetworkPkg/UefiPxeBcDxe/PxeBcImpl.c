@@ -1222,6 +1222,7 @@ EfiPxeBcUdpWrite (
 
     Status = PxeBcUdp6Write (
                Private->Udp6Write,
+               &Private->Udp6Token,
                &Udp6Session,
                Private->UdpTimeOutEvent,
                HeaderSize,
@@ -1249,6 +1250,7 @@ EfiPxeBcUdpWrite (
     //
     Status = PxeBcUdp4Write (
                Private->Udp4Write,
+               &Private->Udp4Token,
                &Udp4Session,
                Private->UdpTimeOutEvent,
                (EFI_IPv4_ADDRESS *)GatewayIp,

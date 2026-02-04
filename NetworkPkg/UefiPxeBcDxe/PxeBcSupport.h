@@ -161,6 +161,7 @@ PxeBcConfigUdp6Write (
   This function is to configure a UDPv4 instance for UdpWrite.
 
   @param[in]       Udp4                 Pointer to EFI_UDP4_PROTOCOL.
+  @param[in]       Token                The pointer to EFI_UDP4_COMPLETION_TOKEN.
   @param[in]       Session              Pointer to the UDP4 session data.
   @param[in]       TimeoutEvent         The event for timeout.
   @param[in]       Gateway              Pointer to the gateway address.
@@ -177,20 +178,22 @@ PxeBcConfigUdp6Write (
 **/
 EFI_STATUS
 PxeBcUdp4Write (
-  IN EFI_UDP4_PROTOCOL      *Udp4,
-  IN EFI_UDP4_SESSION_DATA  *Session,
-  IN EFI_EVENT              TimeoutEvent,
-  IN EFI_IPv4_ADDRESS       *Gateway      OPTIONAL,
-  IN UINTN                  *HeaderSize   OPTIONAL,
-  IN VOID                   *HeaderPtr    OPTIONAL,
-  IN UINTN                  *BufferSize,
-  IN VOID                   *BufferPtr
+  IN EFI_UDP4_PROTOCOL          *Udp4,
+  IN EFI_UDP4_COMPLETION_TOKEN  *Token,
+  IN EFI_UDP4_SESSION_DATA      *Session,
+  IN EFI_EVENT                  TimeoutEvent,
+  IN EFI_IPv4_ADDRESS           *Gateway      OPTIONAL,
+  IN UINTN                      *HeaderSize   OPTIONAL,
+  IN VOID                       *HeaderPtr    OPTIONAL,
+  IN UINTN                      *BufferSize,
+  IN VOID                       *BufferPtr
   );
 
 /**
   This function is to configure a UDPv6 instance for UdpWrite.
 
   @param[in]       Udp6                 Pointer to EFI_UDP6_PROTOCOL.
+  @param[in]       Token                The pointer to EFI_UDP6_COMPLETION_TOKEN.
   @param[in]       Session              Pointer to the UDP6 session data.
   @param[in]       TimeoutEvent         The event for timeout.
   @param[in]       HeaderSize           An optional field which may be set to the length of a header
@@ -206,13 +209,14 @@ PxeBcUdp4Write (
 **/
 EFI_STATUS
 PxeBcUdp6Write (
-  IN EFI_UDP6_PROTOCOL      *Udp6,
-  IN EFI_UDP6_SESSION_DATA  *Session,
-  IN EFI_EVENT              TimeoutEvent,
-  IN UINTN                  *HeaderSize   OPTIONAL,
-  IN VOID                   *HeaderPtr    OPTIONAL,
-  IN UINTN                  *BufferSize,
-  IN VOID                   *BufferPtr
+  IN EFI_UDP6_PROTOCOL          *Udp6,
+  IN EFI_UDP6_COMPLETION_TOKEN  *Token,
+  IN EFI_UDP6_SESSION_DATA      *Session,
+  IN EFI_EVENT                  TimeoutEvent,
+  IN UINTN                      *HeaderSize   OPTIONAL,
+  IN VOID                       *HeaderPtr    OPTIONAL,
+  IN UINTN                      *BufferSize,
+  IN VOID                       *BufferPtr
   );
 
 /**

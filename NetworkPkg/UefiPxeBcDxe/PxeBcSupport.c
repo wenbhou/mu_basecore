@@ -621,6 +621,7 @@ PxeBcConfigUdp6Write (
   This function is to configure a UDPv4 instance for UdpWrite.
 
   @param[in]       Udp4                 The pointer to EFI_UDP4_PROTOCOL.
+  @param[in]       Token                The pointer to EFI_UDP4_COMPLETION_TOKEN.
   @param[in]       Session              The pointer to the UDP4 session data.
   @param[in]       TimeoutEvent         The event for timeout.
   @param[in]       Gateway              The pointer to the gateway address.
@@ -637,23 +638,24 @@ PxeBcConfigUdp6Write (
 **/
 EFI_STATUS
 PxeBcUdp4Write (
-  IN EFI_UDP4_PROTOCOL      *Udp4,
-  IN EFI_UDP4_SESSION_DATA  *Session,
-  IN EFI_EVENT              TimeoutEvent,
-  IN EFI_IPv4_ADDRESS       *Gateway      OPTIONAL,
-  IN UINTN                  *HeaderSize   OPTIONAL,
-  IN VOID                   *HeaderPtr    OPTIONAL,
-  IN UINTN                  *BufferSize,
-  IN VOID                   *BufferPtr
+  IN EFI_UDP4_PROTOCOL          *Udp4,
+  IN EFI_UDP4_COMPLETION_TOKEN  *Token,
+  IN EFI_UDP4_SESSION_DATA      *Session,
+  IN EFI_EVENT                  TimeoutEvent,
+  IN EFI_IPv4_ADDRESS           *Gateway      OPTIONAL,
+  IN UINTN                      *HeaderSize   OPTIONAL,
+  IN VOID                       *HeaderPtr    OPTIONAL,
+  IN UINTN                      *BufferSize,
+  IN VOID                       *BufferPtr
   )
 {
-  EFI_UDP4_COMPLETION_TOKEN  Token;
-  EFI_UDP4_TRANSMIT_DATA     *TxData;
-  UINT32                     TxLength;
-  UINT32                     FragCount;
-  UINT32                     DataLength;
-  BOOLEAN                    IsDone;
-  EFI_STATUS                 Status;
+  // EFI_UDP4_COMPLETION_TOKEN  Token;
+  EFI_UDP4_TRANSMIT_DATA  *TxData;
+  UINT32                  TxLength;
+  UINT32                  FragCount;
+  UINT32                  DataLength;
+  BOOLEAN                 IsDone;
+  EFI_STATUS              Status;
 
   //
   // Arrange one fragment buffer for data, and another fragment buffer for header if has.
@@ -682,8 +684,8 @@ PxeBcUdp4Write (
 
   TxData->UdpSessionData = Session;
   TxData->DataLength     = DataLength;
-  Token.Packet.TxData    = TxData;
-  Token.Status           = EFI_NOT_READY;
+  Token->Packet.TxData   = TxData;
+  Token->Status          = EFI_NOT_READY;
   IsDone                 = FALSE;
 
   Status = gBS->CreateEvent (
@@ -691,13 +693,13 @@ PxeBcUdp4Write (
                   TPL_NOTIFY,
                   PxeBcCommonNotify,
                   &IsDone,
-                  &Token.Event
+                  &Token->Event
                   );
   if (EFI_ERROR (Status)) {
     goto ON_EXIT;
   }
 
-  Status = Udp4->Transmit (Udp4, &Token);
+  Status = Udp4->Transmit (Udp4, Token);
   if (EFI_ERROR (Status)) {
     goto ON_EXIT;
   }
@@ -706,17 +708,17 @@ PxeBcUdp4Write (
   // Poll the UDPv6 read instance if no packet received and no timeout triggered.
   //
   while (!IsDone &&
-         Token.Status == EFI_NOT_READY &&
+         Token->Status == EFI_NOT_READY &&
          EFI_ERROR (gBS->CheckEvent (TimeoutEvent)))
   {
     Udp4->Poll (Udp4);
   }
 
-  Status = (Token.Status == EFI_NOT_READY) ? EFI_TIMEOUT : Token.Status;
+  Status = (Token->Status == EFI_NOT_READY) ? EFI_TIMEOUT : Token->Status;
 
 ON_EXIT:
-  if (Token.Event != NULL) {
-    gBS->CloseEvent (Token.Event);
+  if (Token->Event != NULL) {
+    gBS->CloseEvent (Token->Event);
   }
 
   FreePool (TxData);
@@ -728,6 +730,7 @@ ON_EXIT:
   This function is to configure a UDPv4 instance for UdpWrite.
 
   @param[in]       Udp6                 The pointer to EFI_UDP6_PROTOCOL.
+  @param[in]       Token                The pointer to EFI_UDP6_COMPLETION_TOKEN.
   @param[in]       Session              The pointer to the UDP6 session data.
   @param[in]       TimeoutEvent         The event for timeout.
   @param[in]       HeaderSize           An optional field which may be set to the length of a header
@@ -743,22 +746,23 @@ ON_EXIT:
 **/
 EFI_STATUS
 PxeBcUdp6Write (
-  IN EFI_UDP6_PROTOCOL      *Udp6,
-  IN EFI_UDP6_SESSION_DATA  *Session,
-  IN EFI_EVENT              TimeoutEvent,
-  IN UINTN                  *HeaderSize   OPTIONAL,
-  IN VOID                   *HeaderPtr    OPTIONAL,
-  IN UINTN                  *BufferSize,
-  IN VOID                   *BufferPtr
+  IN EFI_UDP6_PROTOCOL          *Udp6,
+  IN EFI_UDP6_COMPLETION_TOKEN  *Token,
+  IN EFI_UDP6_SESSION_DATA      *Session,
+  IN EFI_EVENT                  TimeoutEvent,
+  IN UINTN                      *HeaderSize   OPTIONAL,
+  IN VOID                       *HeaderPtr    OPTIONAL,
+  IN UINTN                      *BufferSize,
+  IN VOID                       *BufferPtr
   )
 {
-  EFI_UDP6_COMPLETION_TOKEN  Token;
-  EFI_UDP6_TRANSMIT_DATA     *TxData;
-  UINT32                     TxLength;
-  UINT32                     FragCount;
-  UINT32                     DataLength;
-  BOOLEAN                    IsDone;
-  EFI_STATUS                 Status;
+  // EFI_UDP6_COMPLETION_TOKEN  Token;
+  EFI_UDP6_TRANSMIT_DATA  *TxData;
+  UINT32                  TxLength;
+  UINT32                  FragCount;
+  UINT32                  DataLength;
+  BOOLEAN                 IsDone;
+  EFI_STATUS              Status;
 
   //
   // Arrange one fragment buffer for data, and another fragment buffer for header if has.
@@ -783,8 +787,8 @@ PxeBcUdp6Write (
 
   TxData->UdpSessionData = Session;
   TxData->DataLength     = DataLength;
-  Token.Packet.TxData    = TxData;
-  Token.Status           = EFI_NOT_READY;
+  Token->Packet.TxData   = TxData;
+  Token->Status          = EFI_NOT_READY;
   IsDone                 = FALSE;
 
   Status = gBS->CreateEvent (
@@ -792,13 +796,13 @@ PxeBcUdp6Write (
                   TPL_NOTIFY,
                   PxeBcCommonNotify,
                   &IsDone,
-                  &Token.Event
+                  &Token->Event
                   );
   if (EFI_ERROR (Status)) {
     goto ON_EXIT;
   }
 
-  Status = Udp6->Transmit (Udp6, &Token);
+  Status = Udp6->Transmit (Udp6, Token);
   if (EFI_ERROR (Status)) {
     goto ON_EXIT;
   }
@@ -807,17 +811,17 @@ PxeBcUdp6Write (
   // Poll the UDPv6 read instance if no packet received and no timeout triggered.
   //
   while (!IsDone &&
-         Token.Status == EFI_NOT_READY &&
+         Token->Status == EFI_NOT_READY &&
          EFI_ERROR (gBS->CheckEvent (TimeoutEvent)))
   {
     Udp6->Poll (Udp6);
   }
 
-  Status = (Token.Status == EFI_NOT_READY) ? EFI_TIMEOUT : Token.Status;
+  Status = (Token->Status == EFI_NOT_READY) ? EFI_TIMEOUT : Token->Status;
 
 ON_EXIT:
-  if (Token.Event != NULL) {
-    gBS->CloseEvent (Token.Event);
+  if (Token->Event != NULL) {
+    gBS->CloseEvent (Token->Event);
   }
 
   FreePool (TxData);
