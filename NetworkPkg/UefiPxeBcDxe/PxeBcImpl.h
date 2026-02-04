@@ -229,7 +229,9 @@ struct _PXEBC_PRIVATE_DATA {
   // other code holding onto and using that memory
   // doesn't cause an exception.
   //
-  BOOLEAN    DeviceDisconnected;
+  BOOLEAN                      DeviceDisconnected;
+  EFI_UDP4_COMPLETION_TOKEN    Udp4Token;
+  EFI_UDP6_COMPLETION_TOKEN    Udp6Token;
   // MU_CHANGE [END] -  162958
 };
 
