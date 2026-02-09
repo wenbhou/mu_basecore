@@ -213,16 +213,21 @@ PxeBcMtftp6GetFileSize (
   // Parse the options in the reply packet.
   //
   OptCnt = 0;
-  Status = Mtftp6->ParseOptions (
-                     Mtftp6,
-                     PktLen,
-                     Packet,
-                     (UINT32 *)&OptCnt,
-                     &Option
-                     );
-  if (EFI_ERROR (Status)) {
-    goto ON_ERROR;
+  // MU_CHANGE [BEGIN] - 162958 -- don't trust Mtftp6 after a surprise removal
+  if (!Private->DeviceDisconnected) {
+    Status = Mtftp6->ParseOptions (
+                       Mtftp6,
+                       PktLen,
+                       Packet,
+                       (UINT32 *)&OptCnt,
+                       &Option
+                       );
+    if (EFI_ERROR (Status)) {
+      goto ON_ERROR;
+    }
   }
+
+  // MU_CHANGE [END] - 162958
 
   //
   // Parse out the value of "tsize" option.
@@ -244,7 +249,12 @@ ON_ERROR:
     FreePool (Packet);
   }
 
-  Mtftp6->Configure (Mtftp6, NULL);
+  // MU_CHANGE [BEGIN] - 162958 -- don't trust Mtftp6 after a surprise removal
+  if (!Private->DeviceDisconnected) {
+    Mtftp6->Configure (Mtftp6, NULL);
+  }
+
+  // MU_CHANGE [END] - 162958
 
   return Status;
 }
@@ -730,16 +740,21 @@ PxeBcMtftp4GetFileSize (
   // Parse the options in the reply packet.
   //
   OptCnt = 0;
-  Status = Mtftp4->ParseOptions (
-                     Mtftp4,
-                     PktLen,
-                     Packet,
-                     (UINT32 *)&OptCnt,
-                     &Option
-                     );
-  if (EFI_ERROR (Status)) {
-    goto ON_ERROR;
+  // MU_CHANGE [BEGIN] - 162958 -- don't trust Mtftp4 after a surprise removal
+  if (!Private->DeviceDisconnected) {
+    Status = Mtftp4->ParseOptions (
+                       Mtftp4,
+                       PktLen,
+                       Packet,
+                       (UINT32 *)&OptCnt,
+                       &Option
+                       );
+    if (EFI_ERROR (Status)) {
+      goto ON_ERROR;
+    }
   }
+
+  // MU_CHANGE [END] - 162958
 
   //
   // Parse out the value of "tsize" option.
@@ -761,7 +776,12 @@ ON_ERROR:
     FreePool (Packet);
   }
 
-  Mtftp4->Configure (Mtftp4, NULL);
+  // MU_CHANGE [BEGIN] - 162958 -- don't trust Mtftp4 after a surprise removal
+  if (!Private->DeviceDisconnected) {
+    Mtftp4->Configure (Mtftp4, NULL);
+  }
+
+  // MU_CHANGE [END] - 162958
 
   return Status;
 }
