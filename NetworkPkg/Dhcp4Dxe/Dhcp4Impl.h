@@ -59,6 +59,7 @@ struct _DHCP_PROTOCOL {
 
   EFI_EVENT                           CompletionEvent;
   EFI_EVENT                           RenewRebindEvent;
+  EFI_EVENT                           CancelPollingEvent;
 
   EFI_DHCP4_TRANSMIT_RECEIVE_TOKEN    *Token;
   UDP_IO                              *UdpIo; // The UDP IO used for TransmitReceive.

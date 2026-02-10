@@ -770,6 +770,8 @@ EfiDhcp4Start (
   EFI_STATUS     Status;
   EFI_TPL        OldTpl;
   EFI_STATUS     MediaStatus;
+  EFI_EVENT      CancelPollingEvent;
+  EFI_STATUS     IoStatus;
 
   //
   // First validate the parameters
@@ -817,17 +819,43 @@ EfiDhcp4Start (
 
   Instance->CompletionEvent = CompletionEvent;
 
+  if (CompletionEvent == NULL) {
+    Status = gBS->CreateEvent (
+                    0,
+                    TPL_CALLBACK,
+                    NULL,
+                    NULL,
+                    &CancelPollingEvent
+                    );
+    if (EFI_ERROR (Status)) {
+      goto ON_ERROR;
+    }
+
+    Instance->CancelPollingEvent = CancelPollingEvent;
+  }
+
   //
   // Restore the TPL now, don't call poll function at TPL_CALLBACK.
   //
   gBS->RestoreTPL (OldTpl);
 
   if (CompletionEvent == NULL) {
-    while (DhcpSb->IoStatus == EFI_ALREADY_STARTED) {
+    IoStatus = EFI_ALREADY_STARTED;
+    while ((IoStatus == EFI_ALREADY_STARTED)) {
+      if (gBS->CheckEvent (CancelPollingEvent) != EFI_NOT_READY) {
+        IoStatus = EFI_DEVICE_ERROR;
+        break;
+      }
+
+      OldTpl = gBS->RaiseTPL (TPL_CALLBACK);
       DhcpSb->UdpIo->Protocol.Udp4->Poll (DhcpSb->UdpIo->Protocol.Udp4);
+      IoStatus = DhcpSb->IoStatus;
+      gBS->RestoreTPL (OldTpl);
     }
 
-    return DhcpSb->IoStatus;
+    gBS->CloseEvent (CancelPollingEvent);
+
+    return IoStatus;
   }
 
   return EFI_SUCCESS;
@@ -887,6 +915,8 @@ EfiDhcp4RenewRebind (
   DHCP_SERVICE   *DhcpSb;
   EFI_STATUS     Status;
   EFI_TPL        OldTpl;
+  EFI_EVENT      CancelPollingEvent;
+  EFI_STATUS     IoStatus;
 
   //
   // First validate the parameters
@@ -953,14 +983,40 @@ EfiDhcp4RenewRebind (
   DhcpSb->IoStatus           = EFI_ALREADY_STARTED;
   Instance->RenewRebindEvent = CompletionEvent;
 
+  if (CompletionEvent == NULL) {
+    Status = gBS->CreateEvent (
+                    0,
+                    TPL_CALLBACK,
+                    NULL,
+                    NULL,
+                    &CancelPollingEvent
+                    );
+    if (EFI_ERROR (Status)) {
+      goto ON_EXIT;
+    }
+
+    Instance->CancelPollingEvent = CancelPollingEvent;
+  }
+
   gBS->RestoreTPL (OldTpl);
 
   if (CompletionEvent == NULL) {
-    while (DhcpSb->IoStatus == EFI_ALREADY_STARTED) {
+    IoStatus = EFI_ALREADY_STARTED;
+    while (IoStatus == EFI_ALREADY_STARTED) {
+      if (gBS->CheckEvent (CancelPollingEvent) != EFI_NOT_READY) {
+        IoStatus = EFI_DEVICE_ERROR;
+        break;
+      }
+
+      OldTpl = gBS->RaiseTPL (TPL_CALLBACK);
       DhcpSb->UdpIo->Protocol.Udp4->Poll (DhcpSb->UdpIo->Protocol.Udp4);
+      IoStatus = DhcpSb->IoStatus;
+      gBS->RestoreTPL (OldTpl);
     }
 
-    return DhcpSb->IoStatus;
+    gBS->CloseEvent (CancelPollingEvent);
+
+    return IoStatus;
   }
 
   return EFI_SUCCESS;
@@ -1083,6 +1139,11 @@ EfiDhcp4Stop (
 
   if (Instance->Signature != DHCP_PROTOCOL_SIGNATURE) {
     return EFI_INVALID_PARAMETER;
+  }
+
+  if (Instance->CancelPollingEvent != NULL) {
+    gBS->SignalEvent (Instance->CancelPollingEvent);
+    Instance->CancelPollingEvent = NULL;
   }
 
   OldTpl = gBS->RaiseTPL (TPL_CALLBACK);
@@ -1513,6 +1574,7 @@ EfiDhcp4TransmitReceive (
   DHCP_SERVICE    *DhcpSb;
   EFI_IP_ADDRESS  Gateway;
   IP4_ADDR        ClientAddr;
+  EFI_EVENT       CancelPollingEvent;
 
   if ((This == NULL) || (Token == NULL) || (Token->Packet == NULL)) {
     return EFI_INVALID_PARAMETER;
@@ -1629,6 +1691,21 @@ EfiDhcp4TransmitReceive (
     goto ON_ERROR;
   }
 
+  if (Token->CompletionEvent == NULL) {
+    Status = gBS->CreateEvent (
+                    0,
+                    TPL_CALLBACK,
+                    NULL,
+                    NULL,
+                    &CancelPollingEvent
+                    );
+    if (EFI_ERROR (Status)) {
+      goto ON_ERROR;
+    }
+
+    Instance->CancelPollingEvent = CancelPollingEvent;
+  }
+
 ON_ERROR:
 
   if (EFI_ERROR (Status) && (Instance->UdpIo != NULL)) {
@@ -1652,6 +1729,12 @@ ON_ERROR:
     // is NULL.
     //
     while (TRUE) {
+      if (gBS->CheckEvent (CancelPollingEvent) != EFI_NOT_READY) {
+        Status        = EFI_DEVICE_ERROR;
+        Token->Status = EFI_DEVICE_ERROR;
+        break;
+      }
+
       OldTpl = gBS->RaiseTPL (TPL_CALLBACK);
       //
       // Raise TPL to protect the UDPIO in instance, in case that DhcpOnTimerTick
@@ -1665,6 +1748,8 @@ ON_ERROR:
         break;
       }
     }
+
+    gBS->CloseEvent (CancelPollingEvent);
   }
 
   return Status;
