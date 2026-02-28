@@ -930,7 +930,44 @@ UsbEnumeratePort (
   // Usb super speed hub may report other changes, such as warm reset change. Ignore them.
   //
   if ((PortState.PortChangeStatus & (USB_PORT_STAT_C_CONNECTION | USB_PORT_STAT_C_ENABLE | USB_PORT_STAT_C_OVERCURRENT | USB_PORT_STAT_C_RESET)) == 0) {
-    return EFI_SUCCESS;
+    // MU_CHANGE[BEGIN]: UsbBusDxe: Improve downstream hub port enumeration when change bits are missing
+    if (!USB_BIT_IS_SET (PortState.PortStatus, USB_PORT_STAT_CONNECTION)) {
+      // No device is currently attached to this downstream port.
+      // With no latched change bits and no current connection, there's nothing to enumerate.
+      return EFI_SUCCESS;
+    }
+
+    if ((UsbFindChild (HubIf, Port) != NULL)) {
+      // The device on this port has already been enumerated (a child handle exists).
+      // Don't disturb a working device when there are no new port-change events.
+      return EFI_SUCCESS;
+    }
+
+    if (!USB_BIT_IS_SET (PortState.PortStatus, USB_PORT_STAT_ENABLE)) {
+      // A device is present but the port isn't enabled and no change bits were reported.
+      // This can happen on warm reboot / always-powered hubs where connect-change isn't latched.
+      // Force a port reset to drive the port into an enabled state before enumeration.
+      Status = HubApi->ResetPort (HubIf, Port);
+      if (EFI_ERROR (Status)) {
+        DEBUG ((DEBUG_ERROR, "UsbEnumeratePort: failed to reset port %d - %r\n", Port, Status));
+        return Status;
+      }
+
+      // Re-read port status after the reset so the subsequent enumeration logic uses fresh state.
+      ZeroMem (&PortState, sizeof (PortState));
+      Status = HubApi->GetPortStatus (HubIf, Port, &PortState);
+      if (EFI_ERROR (Status)) {
+        DEBUG ((DEBUG_ERROR, "UsbEnumeratePort: failed to get state of port %d after port reset - %r\n", Port, Status));
+        return Status;
+      }
+
+      if (!USB_BIT_IS_SET (PortState.PortStatus, USB_PORT_STAT_CONNECTION)) {
+        // Device disconnected during/after reset.
+        return EFI_SUCCESS;
+      }
+    }
+
+    // MU_CHANGE[END]: UsbBusDxe: Improve downstream hub port enumeration when change bits are missing
   }
 
   DEBUG ((
