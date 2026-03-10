@@ -233,7 +233,8 @@ MnpSyncSendPacket (
     //
     DEBUG ((DEBUG_WARN, "MnpSyncSendPacket: No network cable detected.\n"));
     Token->Status = EFI_NO_MEDIA;
-    goto SIGNAL_TOKEN;
+    Status        = EFI_NO_MEDIA; // MU_CHANGE: Prevent token event signaling on error
+    goto EXIT;                    // MU_CHANGE: Prevent token event signaling on error
   }
 
   if (MnpServiceData->VlanId != 0) {
@@ -261,7 +262,7 @@ MnpSyncSendPacket (
     Status = MnpRecycleTxBuf (MnpDeviceData);
     if (EFI_ERROR (Status)) {
       Token->Status = EFI_DEVICE_ERROR;
-      goto SIGNAL_TOKEN;
+      goto EXIT; // MU_CHANGE: Prevent token event signaling on error
     }
 
     Status = Snp->Transmit (
@@ -277,9 +278,10 @@ MnpSyncSendPacket (
 
   if (EFI_ERROR (Status)) {
     Token->Status = EFI_DEVICE_ERROR;
+    goto EXIT; // MU_CHANGE: Prevent token event signaling on error
   }
 
-SIGNAL_TOKEN:
+  // SIGNAL_TOKEN:  // MU_CHANGE: Prevent token event signaling on error
 
   gBS->SignalEvent (Token->Event);
 
@@ -288,7 +290,10 @@ SIGNAL_TOKEN:
   //
   DispatchDpc ();
 
-  return EFI_SUCCESS;
+  // MU_CHANGE[BEGIN]: Prevent token event signaling on error
+EXIT:
+  return Status;
+  // MU_CHANGE[END]: Prevent token event signaling on error
 }
 
 /**
