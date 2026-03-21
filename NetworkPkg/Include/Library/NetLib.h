@@ -109,7 +109,7 @@ typedef UINT16  TCP_PORTNO;
 //
 // Number of times to attempt to detect network media through SNP
 //
-#define DETECT_NET_MEDIA_RETRY_ATTEMPTS  2
+#define DETECT_NET_MEDIA_RETRY_ATTEMPTS  FixedPcdGet32 (PcdNetworkMediaDetectMaxAttempts)
 
 // MU_CHANGE [END] - Consider timeout for NetLibDetectMedia() calls in NetLibDetectMediaWaitTimeout()
 

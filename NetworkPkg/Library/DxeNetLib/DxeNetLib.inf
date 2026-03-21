@@ -69,6 +69,9 @@
 
 [FixedPcd]
   gEfiMdePkgTokenSpaceGuid.PcdEnforceSecureRngAlgorithms ## CONSUMES
+  # MU_CHANGE [BEGIN] - Consider timeout for NetLibDetectMedia() calls in NetLibDetectMediaWaitTimeout()
+  gEfiNetworkPkgTokenSpaceGuid.PcdNetworkMediaDetectMaxAttempts ## CONSUMES
+  # MU_CHANGE [END] - Consider timeout for NetLibDetectMedia() calls in NetLibDetectMediaWaitTimeout()
 
 [Depex]
   gEfiRngProtocolGuid
