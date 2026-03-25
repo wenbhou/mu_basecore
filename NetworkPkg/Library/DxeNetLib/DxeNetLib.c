@@ -2563,6 +2563,7 @@ NetLibSnpWaitForMediaPresent (
   }
 
   if (*MediaPresent || (Timeout == 0)) {
+    DEBUG ((DEBUG_ERROR, "NetLib:[%a,%d] Media is present or timeout is zero.\n", __func__, __LINE__));
     return EFI_SUCCESS;
   }
 
@@ -2690,6 +2691,7 @@ NetLibDetectSnpMediaWithTimeoutInternal (
     //
     // Media is present, return directly
     //
+    DEBUG ((DEBUG_ERROR, "NetLib:[%a,%d] Media is present.\n", __func__, __LINE__));
     return EFI_SUCCESS;
   }
 
@@ -2756,7 +2758,9 @@ NetLibDetectSnpMediaWithTimeoutInternal (
       goto Exit;
     }
 
+    DEBUG ((DEBUG_ERROR, "NetLib:[%a,%d] NetLibSnpWaitForMediaPresent BEGIN.\n", __func__, __LINE__));
     WaitStatus = NetLibSnpWaitForMediaPresent (Snp, Timeout, MediaPresent);
+    DEBUG ((DEBUG_ERROR, "NetLib:[%a,%d] NetLibSnpWaitForMediaPresent END.\n", __func__, __LINE__));
 
     //
     // Restore SNP receive filter settings
@@ -2802,7 +2806,9 @@ NetLibDetectSnpMediaWithTimeoutInternal (
     goto Exit;
   }
 
+  DEBUG ((DEBUG_ERROR, "NetLib:[%a,%d] NetLibSnpWaitForMediaPresent BEGIN.\n", __func__, __LINE__));
   WaitStatus = NetLibSnpWaitForMediaPresent (Snp, Timeout, MediaPresent);
+  DEBUG ((DEBUG_ERROR, "NetLib:[%a,%d] NetLibSnpWaitForMediaPresent END.\n", __func__, __LINE__));
 
   //
   // Shut down the simple network

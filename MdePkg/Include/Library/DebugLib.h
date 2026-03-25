@@ -49,7 +49,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define DEBUG_VARIABLE  0x00000100       // Variable
 #define DEBUG_BM        0x00000400       // Boot Manager
 #define DEBUG_BLKIO     0x00001000       // BlkIo Driver
-#define DEBUG_NET       0x00004000       // Network Io Driver
+#define DEBUG_NET       0x00004040       // Network Io Driver
 #define DEBUG_UNDI      0x00010000       // UNDI Driver
 #define DEBUG_LOADFILE  0x00020000       // LoadFile
 #define DEBUG_EVENT     0x00080000       // Event messages

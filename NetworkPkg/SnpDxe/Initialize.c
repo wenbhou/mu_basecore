@@ -255,14 +255,19 @@ SnpUndi32Initialize (
   // If UNDI support cable detect for INITIALIZE command, try it first.
   //
   if (Snp->CableDetectSupported) {
-    if (PxeInit (Snp, PXE_OPFLAGS_INITIALIZE_DETECT_CABLE) == EFI_SUCCESS) {
+    DEBUG ((DEBUG_ERROR, "\nNetLib:[%a,%d] PxeInit PXE_OPFLAGS_INITIALIZE_DETECT_CABLE BEGIN.\n", __func__, __LINE__));
+    EFI_STATUS  Status = PxeInit (Snp, PXE_OPFLAGS_INITIALIZE_DETECT_CABLE);
+    DEBUG ((DEBUG_ERROR, "\nNetLib:[%a,%d] PxeInit PXE_OPFLAGS_INITIALIZE_DETECT_CABLE END. %r.\n", __func__, __LINE__, Status));
+    if (Status == EFI_SUCCESS) {
       goto ON_EXIT;
     }
   }
 
   Snp->Mode.MediaPresent = FALSE;
 
+  DEBUG ((DEBUG_ERROR, "\nNetLib:[%a,%d] PxeInit PXE_OPFLAGS_INITIALIZE_DO_NOT_DETECT_CABLE BEGIN.\n", __func__, __LINE__));
   EfiStatus = PxeInit (Snp, PXE_OPFLAGS_INITIALIZE_DO_NOT_DETECT_CABLE);
+  DEBUG ((DEBUG_ERROR, "\nNetLib:[%a,%d] PxeInit PXE_OPFLAGS_INITIALIZE_DO_NOT_DETECT_CABLE END. %r\n", __func__, __LINE__, EfiStatus));
 
   if (EFI_ERROR (EfiStatus)) {
     gBS->CloseEvent (Snp->Snp.WaitForPacket);

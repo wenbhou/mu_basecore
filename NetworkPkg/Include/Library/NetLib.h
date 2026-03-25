@@ -114,7 +114,7 @@ typedef UINT16  TCP_PORTNO;
 //
 // Amount of time to wait for network media to be detected through SNP, in 100ns units
 //
-#define SNP_MEDIA_DETECT_WAITING_TIME  EFI_TIMER_PERIOD_SECONDS(2)
+#define SNP_MEDIA_DETECT_WAITING_TIME  EFI_TIMER_PERIOD_SECONDS(20)
 
 // MU_CHANGE [END] - Consider timeout for NetLibDetectMedia() calls in NetLibDetectMediaWaitTimeout()
 
